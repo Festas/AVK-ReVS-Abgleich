@@ -1,7 +1,7 @@
 # AVK-ReV-Abgleich
 
 Desktop-Tool zum Abgleich von ReVS-Exporten mit AVK-Daten.  
-Erstellt von Gregor Schuboth.
+Entwickelt von Eric Schönke für Kernkraftwerk Krümmel (KKK).
 
 ---
 

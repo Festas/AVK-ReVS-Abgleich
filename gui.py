@@ -51,6 +51,10 @@ DARK_THEME: Dict[str, str] = {
     "select_fg": "#ffffff",
     "listbox_bg": "#0d1b2a",
     "listbox_fg": "#ffffff",
+    "warning_fg": "#ffc857",
+    "success_fg": "#4ade80",
+    "group_bg": "#1b263b",
+    "group_fg": "#ffffff",
 }
 
 LIGHT_THEME: Dict[str, str] = {
@@ -72,6 +76,10 @@ LIGHT_THEME: Dict[str, str] = {
     "select_fg": "#ffffff",
     "listbox_bg": "#ffffff",
     "listbox_fg": "#0d1b2a",
+    "warning_fg": "#d97706",
+    "success_fg": "#16a34a",
+    "group_bg": "#e2e8f0",
+    "group_fg": "#0d1b2a",
 }
 
 THEMES: Dict[str, Dict[str, str]] = {
@@ -89,9 +97,15 @@ def get_theme_colors(theme_name: str) -> Dict[str, str]:
 # HILFSFUNKTIONEN
 # ============================================================================
 
-def center_window(window: tk.Tk, width: int, height: int) -> None:
-    """Zentriert ein Fenster auf dem Bildschirm."""
+def center_window(window: tk.Tk, width: Optional[int] = None, height: Optional[int] = None) -> None:
+    """Zentriert ein Fenster auf dem Bildschirm.
+
+    Wenn width und height weggelassen werden, wird die aktuelle Fenstergröße verwendet.
+    """
     window.update_idletasks()
+    if width is None or height is None:
+        width = window.winfo_width()
+        height = window.winfo_height()
     x = (window.winfo_screenwidth() // 2) - (width // 2)
     y = (window.winfo_screenheight() // 2) - (height // 2)
     window.geometry(f"{width}x{height}+{x}+{y}")
