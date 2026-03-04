@@ -1,0 +1,27 @@
+{
+  "file_paths": {
+    "netzwerkpfad": "Z:\\KKK\\Fachbereiche\\TKW\\Allgemein\\ReVS Arbeitsordner\\12_ReVS-AVK-Abgleich",
+    "revs_datei": "export.xlsx",
+    "avk_dateinamen": ["AVK.xlsx", "Avk.xlsx", "avk.xlsx"],
+    "abgleich_datei": "Abgleich.xlsx"
+  },
+  "spalten": {
+    "revs": ["Verpackungs-ID", "Standort", "Reststoff-ID", "Nettomasse/kg"],
+    "avk": ["Behälternummer", "Lagerort/Absender", "Abfallmasse [kg]", "Individuelle ID"]
+  },
+  "standorte": {
+    "ort_kkk": "KKK",
+    "standort_an_avk": "An AVK übergeben",
+    "standort_zw6": "ZW6-1",
+    "standort_container": "Containerstellplatz-ÜB",
+    "container_bezeichnung": "CONTAINER 20\""
+  },
+  "gebindetyp": {
+    "dreistellig": ["V", "E"],
+    "dreistellig_zwei": ["MH", "SO", "AK", "KE"]
+  },
+  "ui": {
+    "theme": "dark",
+    "window_size": "900x700"
+  }
+}
