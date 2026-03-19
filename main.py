@@ -1,5 +1,5 @@
 """
-AVK-ReV-Abgleich – Hauptanwendung
+AVK-vs-ReVS – Hauptanwendung
 GUI-basiertes Desktop-Tool zum Abgleich von ReVS- und AVK-Exporten.
 """
 import datetime
@@ -14,9 +14,9 @@ from gui import center_window, get_theme_colors, resource_path, ResultsPreview
 
 
 class AbgleichApp:
-    """Hauptanwendungs-Klasse für den AVK-ReV-Abgleich."""
+    """Hauptanwendungs-Klasse für AVK-vs-ReVS."""
 
-    TITLE = "AVK-ReV-Abgleich"
+    TITLE = "AVK-vs-ReVS"
     VERSION = "1.0"
     SUBTITLE = "Abgleich von ReVS-Exporten mit AVK-Daten"
 
@@ -72,8 +72,7 @@ class AbgleichApp:
             font=("Segoe UI", 10),
             bg=c["header_bg"],
             fg=c["header_fg"],
-            pady=(0, 15),
-        ).pack()
+        ).pack(pady=(0, 15))
 
         # Content-Bereich
         content_frame = tk.Frame(self.root, bg=c["bg"], padx=30, pady=20)
@@ -223,7 +222,7 @@ class AbgleichApp:
         )
         info_text.insert(
             tk.END,
-            "Willkommen beim AVK-ReV-Abgleich!\n\n"
+            "Willkommen bei AVK-vs-ReVS!\n\n"
             "Dieses Tool vergleicht den ReVS-Export (export.xlsx) mit der AVK-Datenliste\n"
             "(AVK.xlsx) und erstellt eine Abgleich-Datei mit allen Abweichungen.\n\n"
             "Workflow:\n"

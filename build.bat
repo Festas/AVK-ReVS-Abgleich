@@ -1,7 +1,7 @@
 @echo off
-REM Build-Skript für AVK-ReV-Abgleich (Windows)
+REM Build-Skript für AVK-vs-ReVS (Windows)
 
-echo === AVK-ReV-Abgleich Build-Skript ===
+echo === AVK-vs-ReVS Build-Skript ===
 echo.
 
 REM PyInstaller prüfen
@@ -21,12 +21,12 @@ echo Erstelle Standalone-Anwendung...
 pyinstaller build.spec
 
 REM Ergebnis prüfen
-if exist "dist\AVK-ReV-Abgleich.exe" (
+if exist "dist\AVK-vs-ReVS.exe" (
     echo.
     echo Build erfolgreich!
-    echo Pfad zur EXE: dist\AVK-ReV-Abgleich.exe
+    echo Pfad zur EXE: dist\AVK-vs-ReVS.exe
     echo.
-    dir dist\AVK-ReV-Abgleich.exe
+    dir dist\AVK-vs-ReVS.exe
 ) else (
     echo.
     echo Build fehlgeschlagen!

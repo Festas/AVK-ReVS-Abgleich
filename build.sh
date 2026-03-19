@@ -1,7 +1,7 @@
 #!/bin/bash
-# Build-Skript für AVK-ReV-Abgleich (Linux/Mac)
+# Build-Skript für AVK-vs-ReVS (Linux/Mac)
 
-echo "=== AVK-ReV-Abgleich Build-Skript ==="
+echo "=== AVK-vs-ReVS Build-Skript ==="
 echo ""
 
 # PyInstaller prüfen
@@ -19,15 +19,15 @@ echo "Erstelle Standalone-Anwendung..."
 pyinstaller build.spec
 
 # Ergebnis prüfen
-if [ -f "dist/AVK-ReV-Abgleich.exe" ] || [ -f "dist/AVK-ReV-Abgleich" ]; then
+if [ -f "dist/AVK-vs-ReVS.exe" ] || [ -f "dist/AVK-vs-ReVS" ]; then
     echo ""
     echo "✓ Build erfolgreich!"
     echo "Pfad zur Anwendung: dist/"
     echo ""
-    if [ -f "dist/AVK-ReV-Abgleich.exe" ]; then
-        ls -lh dist/AVK-ReV-Abgleich.exe
+    if [ -f "dist/AVK-vs-ReVS.exe" ]; then
+        ls -lh dist/AVK-vs-ReVS.exe
     else
-        ls -lh dist/AVK-ReV-Abgleich
+        ls -lh dist/AVK-vs-ReVS
     fi
 else
     echo ""

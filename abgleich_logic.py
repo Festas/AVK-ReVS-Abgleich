@@ -1,5 +1,5 @@
 """
-AVK-ReV-Abgleich Vergleichslogik
+AVK-vs-ReVS Vergleichslogik
 Enthält die reine Vergleichslogik zwischen ReVS- und AVK-Daten.
 """
 from typing import Any, Dict, List

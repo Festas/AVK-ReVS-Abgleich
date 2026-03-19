@@ -1,5 +1,5 @@
 """
-AVK-ReV-Abgleich GUI-Modul
+AVK-vs-ReVS GUI-Modul
 Theme-System, Hilfsfunktionen und wiederverwendbare Dialog-Klassen.
 """
 import os

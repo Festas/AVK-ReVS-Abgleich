@@ -1,4 +1,4 @@
-# AVK-ReV-Abgleich
+# AVK-vs-ReVS
 
 Desktop-Tool zum Abgleich von ReVS-Exporten mit AVK-Daten.  
 Entwickelt von Eric Schönke für Kernkraftwerk Krümmel (KKK).
@@ -42,7 +42,7 @@ python main.py
 build.bat
 ```
 
-Die fertige EXE liegt anschließend unter `dist\AVK-ReV-Abgleich.exe`.
+Die fertige EXE liegt anschließend unter `dist\AVK-vs-ReVS.exe`.
 
 ### Linux / Mac
 
@@ -72,7 +72,7 @@ Die Einstellungen werden beim nächsten Start automatisch geladen.
 ## Projektstruktur
 
 ```
-AVK-ReV-Abgleich/
+AVK-vs-ReVS/
 ├── main.py              # Einstiegspunkt, GUI (tkinter)
 ├── gui.py               # Theme-System, Hilfsfunktionen, ResultsPreview
 ├── config.py            # Config-Klasse mit JSON-Laden und -Speichern

@@ -1,5 +1,5 @@
 """
-AVK-ReV-Abgleich Datei-Handler
+AVK-vs-ReVS Datei-Handler
 Lädt und schreibt Excel-Dateien für den Abgleich.
 """
 from pathlib import Path

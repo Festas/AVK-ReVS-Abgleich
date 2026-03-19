@@ -26,7 +26,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='AVK-ReV-Abgleich',
+    name='AVK-vs-ReVS',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

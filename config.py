@@ -1,5 +1,5 @@
 """
-AVK-ReV-Abgleich Konfigurationsmodul
+AVK-vs-ReVS Konfigurationsmodul
 Verwaltet alle Konfigurationseinstellungen und Konstanten.
 
 VERWENDUNG:
@@ -57,7 +57,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 # ============================================================================
 
 class Config:
-    """Konfigurationsmanager für AVK-ReV-Abgleich."""
+    """Konfigurationsmanager für AVK-vs-ReVS."""
 
     def __init__(self, config_path: str = "config.json"):
         self.config_path = config_path
