@@ -8,6 +8,8 @@ import tkinter as tk
 from tkinter import scrolledtext
 from typing import Any, Dict, List, Optional
 
+from abgleich_logic import FEHLER_HEADER, FEHLER_COL_WIDTHS
+
 
 # ============================================================================
 # RESOURCE PATH FÜR PYINSTALLER
@@ -118,12 +120,6 @@ def center_window(window: tk.Tk, width: Optional[int] = None, height: Optional[i
 class ResultsPreview(tk.Toplevel):
     """Zeigt die Abgleich-Ergebnisse in einem scrollbaren Fenster."""
 
-    HEADERS = [
-        "Verpackungs-ID", "Reststoff-ID", "Individuelle ID",
-        "Standort ReVS", "Standort AVK",
-        "ReVS Nettomasse/kg", "AVK Abfallmasse [kg]",
-    ]
-
     def __init__(
         self,
         parent: tk.Tk,
@@ -164,12 +160,11 @@ class ResultsPreview(tk.Toplevel):
         self._text.pack(fill=tk.BOTH, expand=True)
 
         # Populate table
-        col_widths = [22, 18, 18, 22, 22, 20, 20]
-        header_line = "  ".join(h.ljust(w) for h, w in zip(self.HEADERS, col_widths))
+        header_line = "  ".join(h.ljust(w) for h, w in zip(FEHLER_HEADER, FEHLER_COL_WIDTHS))
         self._text.insert(tk.END, header_line + "\n")
         self._text.insert(tk.END, "-" * len(header_line) + "\n")
         for row in fehler:
-            line = "  ".join(str(cell).ljust(w) for cell, w in zip(row, col_widths))
+            line = "  ".join(str(cell).ljust(w) for cell, w in zip(row, FEHLER_COL_WIDTHS))
             self._text.insert(tk.END, line + "\n")
         self._text.config(state=tk.DISABLED)
 

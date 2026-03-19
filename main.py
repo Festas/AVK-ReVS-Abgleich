@@ -3,12 +3,14 @@ AVK-vs-ReVS – Hauptanwendung
 GUI-basiertes Desktop-Tool zum Abgleich von ReVS- und AVK-Exporten.
 """
 import datetime
+import logging
 import os
+import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from config import Config
-from abgleich_logic import lese_spalten_indizes, vergleiche_gebinde
+from abgleich_logic import lese_spalten_indizes, vergleiche_gebinde, FEHLER_HEADER, FEHLER_COL_WIDTHS
 from file_handler import lade_dateien, schreibe_ergebnis
 from gui import center_window, get_theme_colors, resource_path, ResultsPreview
 
@@ -126,7 +128,7 @@ class AbgleichApp:
         )
         actions_frame.pack(fill=tk.X, pady=(0, 10))
 
-        tk.Button(
+        self._abgleich_btn = tk.Button(
             actions_frame,
             text="▶  Abgleich starten",
             command=self._starte_abgleich,
@@ -136,7 +138,8 @@ class AbgleichApp:
             relief=tk.RAISED,
             width=25,
             height=2,
-        ).pack(side=tk.LEFT, padx=(0, 8))
+        )
+        self._abgleich_btn.pack(side=tk.LEFT, padx=(0, 8))
 
         self._vorschau_btn = tk.Button(
             actions_frame,
@@ -282,30 +285,31 @@ class AbgleichApp:
         spalten_avk = self.config.get('spalten', 'avk') or []
 
         self._set_status("Lade Dateien…")
-        self.root.update_idletasks()
+        self._abgleich_btn.config(state=tk.DISABLED)
 
-        try:
-            revs, avk = lade_dateien(pfad, revs_datei, avk_dateinamen)
-        except FileNotFoundError as e:
-            messagebox.showerror("Datei nicht gefunden", str(e))
-            self._set_status("Fehler beim Laden der Dateien.")
-            return
+        def _worker() -> None:
+            try:
+                revs, avk = lade_dateien(pfad, revs_datei, avk_dateinamen)
+                idx_revs = lese_spalten_indizes(revs, spalten_revs)
+                idx_avk = lese_spalten_indizes(avk, spalten_avk)
+                self.root.after(0, lambda: self._set_status("Führe Abgleich durch…"))
+                fehler = vergleiche_gebinde(revs, avk, idx_revs, idx_avk, self.config)
+                ausgabe_pfad = schreibe_ergebnis(pfad, abgleich_datei, fehler)
+                self.root.after(0, lambda: self._abgleich_fertig(fehler, ausgabe_pfad))
+            except FileNotFoundError as e:
+                msg = str(e)
+                self.root.after(0, lambda: self._abgleich_fehler("Datei nicht gefunden", msg))
+            except ValueError as e:
+                msg = str(e)
+                self.root.after(0, lambda: self._abgleich_fehler("Spaltenfehler", msg))
+            except Exception as e:
+                msg = str(e)
+                self.root.after(0, lambda: self._abgleich_fehler("Fehler", msg))
 
-        try:
-            idx_revs = lese_spalten_indizes(revs, spalten_revs)
-            idx_avk = lese_spalten_indizes(avk, spalten_avk)
-        except ValueError as e:
-            messagebox.showerror("Spaltenfehler", str(e))
-            self._set_status("Fehler beim Einlesen der Spalten.")
-            return
+        threading.Thread(target=_worker, daemon=True).start()
 
-        self._set_status("Führe Abgleich durch…")
-        self.root.update_idletasks()
-
-        fehler = vergleiche_gebinde(revs, avk, idx_revs, idx_avk, self.config)
-
-        ausgabe_pfad = schreibe_ergebnis(pfad, abgleich_datei, fehler)
-
+    def _abgleich_fertig(self, fehler: list, ausgabe_pfad: str) -> None:
+        self._abgleich_btn.config(state=tk.NORMAL)
         self._last_fehler = fehler
         self._last_ausgabe_pfad = ausgabe_pfad
         self._vorschau_btn.config(state=tk.NORMAL)
@@ -326,6 +330,11 @@ class AbgleichApp:
                 f"{count} Abweichung(en) gefunden.\n\nErgebnis gespeichert unter:\n{ausgabe_pfad}",
             )
 
+    def _abgleich_fehler(self, title: str, message: str) -> None:
+        self._abgleich_btn.config(state=tk.NORMAL)
+        messagebox.showerror(title, message)
+        self._set_status(f"Fehler: {message}")
+
     def _zeige_ergebnisse(self, fehler: list) -> None:
         c = self.colors
         self._result_text.config(state=tk.NORMAL)
@@ -336,17 +345,11 @@ class AbgleichApp:
             self._result_text.tag_configure("ok", foreground=c["success"])
             self._result_text.tag_add("ok", "1.0", tk.END)
         else:
-            headers = [
-                "Verpackungs-ID", "Reststoff-ID", "Individuelle ID",
-                "Standort ReVS", "Standort AVK",
-                "ReVS Nettomasse/kg", "AVK Abfallmasse [kg]",
-            ]
-            col_w = [22, 18, 18, 22, 22, 20, 20]
-            header_line = "  ".join(h.ljust(w) for h, w in zip(headers, col_w))
+            header_line = "  ".join(h.ljust(w) for h, w in zip(FEHLER_HEADER, FEHLER_COL_WIDTHS))
             self._result_text.insert(tk.END, header_line + "\n")
             self._result_text.insert(tk.END, "-" * len(header_line) + "\n")
             for row in fehler:
-                line = "  ".join(str(cell).ljust(w) for cell, w in zip(row, col_w))
+                line = "  ".join(str(cell).ljust(w) for cell, w in zip(row, FEHLER_COL_WIDTHS))
                 self._result_text.insert(tk.END, line + "\n")
 
         self._result_text.config(state=tk.DISABLED)
@@ -446,6 +449,10 @@ class AbgleichApp:
 # ============================================================================
 
 def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     root = tk.Tk()
     app = AbgleichApp(root)  # noqa: F841
     root.mainloop()

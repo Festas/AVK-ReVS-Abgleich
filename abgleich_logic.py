@@ -2,7 +2,7 @@
 AVK-vs-ReVS Vergleichslogik
 Enthält die reine Vergleichslogik zwischen ReVS- und AVK-Daten.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 FEHLER_HEADER = [
     "Verpackungs-ID", "Reststoff-ID", "Individuelle ID",
@@ -10,10 +10,30 @@ FEHLER_HEADER = [
     "ReVS Nettomasse/kg", "AVK Abfallmasse [kg]",
 ]
 
+FEHLER_COL_WIDTHS = [22, 18, 18, 22, 22, 20, 20]
+
+
+def _safe_str(value: Any) -> str:
+    """Konvertiert den Wert zu String, oder gibt leeren String zurück falls None."""
+    return str(value) if value is not None else ""
+
+
+def _normalize_mass(value: Any) -> Optional[float]:
+    """Normalisiert Massenwerte für den Vergleich (Komma→Punkt, float-Konvertierung)."""
+    if value is None or value == "":
+        return None
+    try:
+        return float(str(value).replace(",", ".").strip())
+    except ValueError:
+        return None
+
 
 def lese_spalten_indizes(sheet: Any, spalten_namen: List[str]) -> Dict[str, int]:
     """Ermittelt die Spaltenindizes für die angegebenen Spaltennamen aus dem Header."""
-    header = [sheet.cell(1, col).value for col in range(1, sheet.max_column + 1)]
+    header: List[Any] = []
+    for row in sheet.iter_rows(min_row=1, max_row=1, values_only=True):
+        header = list(row)
+        break
     indizes = {}
     for name in spalten_namen:
         if name not in header:
@@ -66,8 +86,8 @@ def vergleiche_gebinde(
 
     # AVK-Gebinde einlesen
     gebinde_avk = []
-    for zeile in range(1, avk.max_row + 1):
-        zellwert = avk.cell(zeile, idx_avk["Behälternummer"]).value
+    for avk_row in avk.iter_rows(values_only=True):
+        zellwert = avk_row[idx_avk["Behälternummer"] - 1]
         if zellwert is None or zellwert == "":
             continue
         zellwert_str = str(zellwert)
@@ -84,12 +104,9 @@ def vergleiche_gebinde(
         else:
             gebinde_nummer = zellwert_str
 
-        lagerort = avk.cell(zeile, idx_avk["Lagerort/Absender"]).value
-        lagerort = lagerort if lagerort is not None else ""
-        masse = avk.cell(zeile, idx_avk["Abfallmasse [kg]"]).value
-        masse = masse if masse is not None else ""
-        ind_id = avk.cell(zeile, idx_avk["Individuelle ID"]).value
-        ind_id = ind_id if ind_id is not None else ""
+        lagerort = _safe_str(avk_row[idx_avk["Lagerort/Absender"] - 1])
+        masse = _safe_str(avk_row[idx_avk["Abfallmasse [kg]"] - 1])
+        ind_id = _safe_str(avk_row[idx_avk["Individuelle ID"] - 1])
 
         if gebinde_typ:
             aufgenommen_avk.add(gebinde_typ)
@@ -107,8 +124,8 @@ def vergleiche_gebinde(
 
     # ReVS-Gebinde einlesen
     gebinde_revs = []
-    for zeile in range(1, revs.max_row + 1):
-        verpackungs_id = revs.cell(zeile, idx_revs["Verpackungs-ID"]).value
+    for revs_row in revs.iter_rows(values_only=True):
+        verpackungs_id = revs_row[idx_revs["Verpackungs-ID"] - 1]
         if verpackungs_id is None or verpackungs_id == "":
             continue
         verpackungs_id_str = str(verpackungs_id)
@@ -130,12 +147,10 @@ def vergleiche_gebinde(
         else:
             gebinde_nummer = gebinde_typ
 
-        standort = revs.cell(zeile, idx_revs["Standort"]).value
-        standort = str(standort) if standort is not None else ""
-        reststoff_id = revs.cell(zeile, idx_revs["Reststoff-ID"]).value
-        reststoff_id = reststoff_id if reststoff_id is not None else ""
-        nettomasse = revs.cell(zeile, idx_revs["Nettomasse/kg"]).value
-        nettomasse = nettomasse if nettomasse is not None else ""
+        standort_val = revs_row[idx_revs["Standort"] - 1]
+        standort = _safe_str(standort_val)
+        reststoff_id = _safe_str(revs_row[idx_revs["Reststoff-ID"] - 1])
+        nettomasse = _safe_str(revs_row[idx_revs["Nettomasse/kg"] - 1])
 
         if gebinde_typ:
             aufgenommen_revs.add(gebinde_typ)
@@ -152,47 +167,55 @@ def vergleiche_gebinde(
             "vorhanden": False,
         })
 
+    # AVK-Gebinde nach Nummer indexieren → O(n + m) statt O(n * m)
+    avk_index: Dict[str, List[dict]] = {}
+    for eintrag in gebinde_avk:
+        avk_index.setdefault(eintrag["nummer"], []).append(eintrag)
+
     # Abgleich durchführen
     fehler: List[List[Any]] = []
     for revs_eintrag in gebinde_revs:
-        for avk_eintrag in gebinde_avk:
+        kandidaten = avk_index.get(revs_eintrag["nummer"], [])
+        for avk_eintrag in kandidaten:
             if avk_eintrag["vorhanden"]:
                 continue
-            if revs_eintrag["nummer"] == avk_eintrag["nummer"]:
-                revs_eintrag["vorhanden"] = True
-                avk_eintrag["vorhanden"] = True
 
-                abweichungen = 0
-                ind_id_out = avk_eintrag["ind_id"]
-                standort_avk_out = avk_eintrag["lagerort"]
-                masse_avk_out = avk_eintrag["masse"]
+            revs_eintrag["vorhanden"] = True
+            avk_eintrag["vorhanden"] = True
 
-                if str(revs_eintrag["reststoff_id"]) == str(avk_eintrag["ind_id"]):
-                    ind_id_out = "stimmt mit ReVS"
-                else:
-                    abweichungen += 1
+            abweichungen = 0
+            ind_id_out = avk_eintrag["ind_id"]
+            standort_avk_out = avk_eintrag["lagerort"]
+            masse_avk_out = avk_eintrag["masse"]
 
-                if revs_eintrag["avk_standort"] == str(avk_eintrag["lagerort"]):
-                    standort_avk_out = "stimmt mit ReVS"
-                else:
-                    abweichungen += 1
+            if str(revs_eintrag["reststoff_id"]) == str(avk_eintrag["ind_id"]):
+                ind_id_out = "stimmt mit ReVS"
+            else:
+                abweichungen += 1
 
-                if str(revs_eintrag["nettomasse"]) == str(avk_eintrag["masse"]):
-                    masse_avk_out = "stimmt mit ReVS"
-                else:
-                    abweichungen += 1
+            if revs_eintrag["avk_standort"] == str(avk_eintrag["lagerort"]):
+                standort_avk_out = "stimmt mit ReVS"
+            else:
+                abweichungen += 1
 
-                if abweichungen > 0:
-                    fehler.append([
-                        revs_eintrag["nummer"],
-                        revs_eintrag["reststoff_id"],
-                        ind_id_out,
-                        revs_eintrag["standort"],
-                        standort_avk_out,
-                        revs_eintrag["nettomasse"],
-                        masse_avk_out,
-                    ])
-                break
+            masse_revs_norm = _normalize_mass(revs_eintrag["nettomasse"])
+            masse_avk_norm = _normalize_mass(avk_eintrag["masse"])
+            if masse_revs_norm == masse_avk_norm:
+                masse_avk_out = "stimmt mit ReVS"
+            else:
+                abweichungen += 1
+
+            if abweichungen > 0:
+                fehler.append([
+                    revs_eintrag["nummer"],
+                    revs_eintrag["reststoff_id"],
+                    ind_id_out,
+                    revs_eintrag["standort"],
+                    standort_avk_out,
+                    revs_eintrag["nettomasse"],
+                    masse_avk_out,
+                ])
+            break
 
         # ReVS-Gebinde nicht im AVK gefunden
         # KKK-Gebinde nur melden, wenn KKK auch im AVK-Auszug enthalten ist
